@@ -18,17 +18,8 @@ resource "aws_vpc" "default" {
 #   }
 # }
 
-resource "aws_internet_gateway" "default" {
-  vpc_id = aws_vpc.default.id
-
-  tags = {
-    Name = "igw-${local.vpc_name}"
-  }
-}
-
 resource "aws_eip" "nat" {
-  count = length(var.availability_zones)
-  # domain = "vpc"
+  domain = "vpc"
 
   lifecycle {
     create_before_destroy = true
@@ -36,14 +27,11 @@ resource "aws_eip" "nat" {
 }
 
 resource "aws_nat_gateway" "nat" {
-  count = length(var.availability_zones)
-
-  allocation_id = element(aws_eip.nat.*.id, count.index)
-
-  subnet_id = element(aws_subnet.public.*.id, count.index)
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public[0].id
 
   tags = {
-    Name = "NAT-GW${count.index}-${local.vpc_name}"
+    Name = "NAT-GW-${local.vpc_name}"
   }
 }
 
